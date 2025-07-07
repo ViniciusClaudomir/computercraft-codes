@@ -139,6 +139,7 @@ function main()
         
         minerarObsidiana()
     end
+    
 
     andarEmObsidiana()
     
