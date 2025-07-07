@@ -14,6 +14,9 @@ function minerarObsidiana()
             turtle.digDown()
             os.sleep(0.5)
             print("Obsidiana quebrada!")
+        else
+            print("Nenhuma obsidiana encontrada abaixo")
+            break
         end
     end
 end
@@ -34,12 +37,50 @@ function reabastecer()
     local nivelCombustivel = turtle.getFuelLevel()
     local maxCombustivel = turtle.getFuelLimit()
     print("Nível de combustível atual: " .. nivelCombustivel .. "/" .. maxCombustivel)
-    while nivelCombustivel < (maxCombustivel * 0.2) then
+    
+    if nivelCombustivel < (maxCombustivel * 0.2) then
         print("Combustível baixo! Tentando reabastecer...")
-        local item = turtle.getItemDetail(i)
-        turtle.refuel(1)
+        
+        -- Procurar por combustível no inventário
+        for i = 1, 16 do
+            local item = turtle.getItemDetail(i)
+            if item and turtle.refuel(1) then
+                print("Combustível adicionado!")
+                nivelCombustivel = turtle.getFuelLevel()
+                break
+            end
+        end
+        
+        if nivelCombustivel < (maxCombustivel * 0.2) then
+            print("ERRO: Sem combustível suficiente para continuar!")
+            return false
+        end
     end
+    return true
+end
 
-while not verificarInventario() do
-    reabastecer()
-    minerarObsidiana()
+-- Função principal
+function main()
+    print("Iniciando mineração automática de obsidiana...")
+    
+    while not verificarInventario() do
+        -- Verificar combustível antes de minerar
+        if not reabastecer() then
+            print("Parando mineração devido à falta de combustível")
+            break
+        end
+        
+        -- Verificar se há combustível suficiente para minerar
+        if turtle.getFuelLevel() < 1 then
+            print("ERRO: Sem combustível para minerar!")
+            break
+        end
+        
+        minerarObsidiana()
+    end
+    
+    print("Mineração concluída! Inventário cheio ou sem combustível.")
+end
+
+-- Executar o programa
+main()
