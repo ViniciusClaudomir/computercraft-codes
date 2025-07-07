@@ -195,47 +195,209 @@ function reabastecer()
     return true -- Combustível suficiente
 end
 
--- Função principal para andar em linha
-function andarEmLinha()
-    print("Iniciando movimento em linha...")
+-- Função para verificar se há obsidiana em uma direção específica
+function verificarObsidianaDirecao(direcao)
+    if direcao == "frente" then
+        local sucesso, dados = turtle.inspect()
+        if sucesso then
+            return dados.name == "minecraft:obsidian"
+        end
+    elseif direcao == "esquerda" then
+        turtle.turnLeft()
+        local sucesso, dados = turtle.inspect()
+        turtle.turnRight()
+        if sucesso then
+            return dados.name == "minecraft:obsidian"
+        end
+    elseif direcao == "direita" then
+        turtle.turnRight()
+        local sucesso, dados = turtle.inspect()
+        turtle.turnLeft()
+        if sucesso then
+            return dados.name == "minecraft:obsidian"
+        end
+    end
+    return false
+end
+
+-- Função para verificar se há um baú em uma direção específica
+function verificarBauDirecao(direcao)
+    if direcao == "esquerda" then
+        turtle.turnLeft()
+        local sucesso, dados = turtle.inspect()
+        turtle.turnRight()
+        if sucesso then
+            return dados.name == "minecraft:chest"
+        end
+    elseif direcao == "direita" then
+        turtle.turnRight()
+        local sucesso, dados = turtle.inspect()
+        turtle.turnLeft()
+        if sucesso then
+            return dados.name == "minecraft:chest"
+        end
+    end
+    return false
+end
+
+-- Função para verificar se o inventário está cheio
+function inventarioCheio()
+    for i = 1, 16 do
+        local item = turtle.getItemDetail(i)
+        if not item then
+            return false -- Encontrou um slot vazio
+        end
+    end
+    return true -- Todos os slots estão ocupados
+end
+
+-- Função para contar quantas obsidianas tem no inventário
+function contarObsidianas()
+    local contador = 0
+    for i = 1, 16 do
+        local item = turtle.getItemDetail(i)
+        if item and item.name == "minecraft:obsidian" then
+            contador = contador + item.count
+        end
+    end
+    return contador
+end
+
+-- Função para depositar obsidianas em um baú
+function depositarObsidianas()
+    print("Procurando baú para depositar obsidianas...")
+    
+    -- Verifica se há baú à esquerda ou direita
+    local bauEsquerda = verificarBauDirecao("esquerda")
+    local bauDireita = verificarBauDirecao("direita")
+    
+    if bauEsquerda then
+        print("Baú encontrado à esquerda! Depositando...")
+        turtle.turnLeft()
+        turtle.place()
+        turtle.turnRight()
+        
+        -- Deposita todas as obsidianas
+        for i = 1, 16 do
+            local item = turtle.getItemDetail(i)
+            if item and item.name == "minecraft:obsidian" then
+                turtle.select(i)
+                turtle.drop()
+            end
+        end
+        turtle.select(1) -- Volta para o slot 1
+        print("Obsidianas depositadas com sucesso!")
+        return true
+        
+    elseif bauDireita then
+        print("Baú encontrado à direita! Depositando...")
+        turtle.turnRight()
+        turtle.place()
+        turtle.turnLeft()
+        
+        -- Deposita todas as obsidianas
+        for i = 1, 16 do
+            local item = turtle.getItemDetail(i)
+            if item and item.name == "minecraft:obsidian" then
+                turtle.select(i)
+                turtle.drop()
+            end
+        end
+        turtle.select(1) -- Volta para o slot 1
+        print("Obsidianas depositadas com sucesso!")
+        return true
+        
+    else
+        print("Nenhum baú encontrado nas laterais!")
+        return false
+    end
+end
+
+-- Função para procurar obsidiana na frente
+function procurarObsidianaFrente()
+    print("Procurando obsidiana na frente...")
+    
+    -- Anda pelo caminho de obsidiana abaixo até encontrar obsidiana na frente
+    while detectarObsidiana() do
+        -- Verifica se há obsidiana na frente
+        if verificarObsidianaDirecao("frente") then
+            print("Obsidiana encontrada na frente!")
+            return true
+        end
+        
+        -- Se não há obsidiana na frente, verifica as laterais
+        local obsidianEsquerda = verificarObsidianaDirecao("esquerda")
+        local obsidianDireita = verificarObsidianaDirecao("direita")
+        
+        if obsidianEsquerda then
+            print("Virando para esquerda para procurar obsidiana...")
+            turtle.turnLeft()
+            turtle.forward()
+        elseif obsidianDireita then
+            print("Virando para direita para procurar obsidiana...")
+            turtle.turnRight()
+            turtle.forward()
+        else
+            print("Nenhuma obsidiana encontrada! Parando busca...")
+            return false
+        end
+        
+        os.sleep(0.1)
+    end
+    
+    print("Não há mais obsidiana abaixo! Parando busca...")
+    return false
+end
+
+-- Função principal de mineração automática de obsidiana
+function minerarObsidiana()
+    print("=== MINERAÇÃO AUTOMÁTICA DE OBSIDIANA ===")
+    print("A turtle irá:")
+    print("- Quebrar obsidiana apenas na frente")
+    print("- Depositar no baú quando inventário encher")
+    print("- Procurar mais obsidiana automaticamente")
     print("Pressione Ctrl+T para parar")
+    print()
     
     while true do
-        -- Verifica combustível antes de cada movimento
+        -- Verifica combustível antes de cada ação
         if not reabastecer() then
-            print("ERRO: Sem combustível! Parando movimento...")
+            print("ERRO: Sem combustível! Parando mineração...")
             break
         end
         
-        -- Verifica se há obsidiana abaixo
-        if detectarObsidiana() then
-            print("Obsidiana detectada! Movendo para frente...")
-            -- Tenta mover para frente
-            if turtle.forward() then
-                print("Movimento realizado com sucesso")
-            else
-                print("Não foi possível mover para frente")
-                -- Tenta quebrar o bloco à frente se não conseguir mover
-                if turtle.detect() then
-                    turtle.dig()
-                    turtle.forward()
-                end
+        -- Verifica se o inventário está cheio
+        if inventarioCheio() then
+            print("Inventário cheio! Procurando baú...")
+            if not depositarObsidianas() then
+                print("ERRO: Não foi possível depositar obsidianas! Parando...")
+                break
             end
+        end
+        
+        -- Verifica se há obsidiana na frente
+        if verificarObsidianaDirecao("frente") then
+            print("Quebrando obsidiana na frente...")
+            turtle.dig()
+            print("Obsidiana quebrada! Total no inventário: " .. contarObsidianas())
         else
-            print("Obsidiana não detectada! Parando...")
-            break
+            print("Nenhuma obsidiana na frente! Procurando mais obsidiana...")
+            if not procurarObsidianaFrente() then
+                print("Nenhuma obsidiana encontrada! Parando mineração...")
+                break
+            end
         end
         
         -- Pequena pausa para não sobrecarregar
         os.sleep(0.1)
     end
     
-    print("Movimento finalizado")
+    print("Mineração finalizada!")
 end
 
--- Função para voltar ao ponto inicial
+-- Função para voltar ao ponto inicial com curvas
 function voltarAoInicio()
-    print("Voltando ao ponto inicial...")
+    print("Voltando ao ponto inicial com curvas...")
     
     -- Verifica combustível antes de começar
     if not reabastecer() then
@@ -243,6 +405,7 @@ function voltarAoInicio()
         return
     end
     
+    -- Vira 180 graus para voltar
     turtle.turnLeft()
     turtle.turnLeft()
     
@@ -253,10 +416,48 @@ function voltarAoInicio()
             break
         end
         
-        turtle.forward()
+        -- Tenta mover para frente primeiro
+        if turtle.forward() then
+            print("Retorno: movimento para frente realizado")
+        else
+            -- Se não consegue ir para frente, verifica as laterais
+            print("Retorno: verificando laterais...")
+            
+            local obsidianEsquerda = verificarObsidianaDirecao("esquerda")
+            local obsidianDireita = verificarObsidianaDirecao("direita")
+            
+            if obsidianEsquerda then
+                print("Retorno: obsidiana à esquerda! Virando...")
+                turtle.turnLeft()
+                if turtle.forward() then
+                    print("Retorno: movimento para esquerda realizado")
+                else
+                    if turtle.detect() then
+                        turtle.dig()
+                        turtle.forward()
+                    end
+                end
+            elseif obsidianDireita then
+                print("Retorno: obsidiana à direita! Virando...")
+                turtle.turnRight()
+                if turtle.forward() then
+                    print("Retorno: movimento para direita realizado")
+                else
+                    if turtle.detect() then
+                        turtle.dig()
+                        turtle.forward()
+                    end
+                end
+            else
+                print("Retorno: nenhuma obsidiana encontrada nas laterais! Parando...")
+                break
+            end
+        end
+        
         os.sleep(0.1)
     end
     
+    -- Vira 180 graus para voltar à direção original
     turtle.turnLeft()
     turtle.turnLeft()
     print("Retorno concluído")
@@ -264,18 +465,21 @@ end
 
 -- Menu principal
 function menu()
-    print("=== Turtle Seguidor de Obsidiana ===")
-    print("1. Andar em linha")
+    print("=== Turtle Mineradora de Obsidiana ===")
+    print("1. Mineração automática de obsidiana")
     print("2. Voltar ao início")
     print("3. Testar detecção de obsidiana")
     print("4. Verificar combustível")
-    print("5. Sair")
+    print("5. Testar detecção lateral")
+    print("6. Verificar inventário")
+    print("7. Testar detecção de baú")
+    print("8. Sair")
     print("Escolha uma opção:")
     
     local opcao = read()
     
     if opcao == "1" then
-        andarEmLinha()
+        minerarObsidiana()
     elseif opcao == "2" then
         voltarAoInicio()
     elseif opcao == "3" then
@@ -287,6 +491,33 @@ function menu()
     elseif opcao == "4" then
         reabastecer()
     elseif opcao == "5" then
+        print("Testando detecção lateral...")
+        local obsidianEsquerda = verificarObsidianaDirecao("esquerda")
+        local obsidianDireita = verificarObsidianaDirecao("direita")
+        local obsidianFrente = verificarObsidianaDirecao("frente")
+        
+        print("Obsidiana à frente: " .. (obsidianFrente and "SIM" or "NÃO"))
+        print("Obsidiana à esquerda: " .. (obsidianEsquerda and "SIM" or "NÃO"))
+        print("Obsidiana à direita: " .. (obsidianDireita and "SIM" or "NÃO"))
+    elseif opcao == "6" then
+        print("=== STATUS DO INVENTÁRIO ===")
+        print("Inventário cheio: " .. (inventarioCheio() and "SIM" or "NÃO"))
+        print("Obsidianas no inventário: " .. contarObsidianas())
+        print("Slots ocupados:")
+        for i = 1, 16 do
+            local item = turtle.getItemDetail(i)
+            if item then
+                print("  Slot " .. i .. ": " .. item.name .. " x" .. item.count)
+            end
+        end
+    elseif opcao == "7" then
+        print("Testando detecção de baú...")
+        local bauEsquerda = verificarBauDirecao("esquerda")
+        local bauDireita = verificarBauDirecao("direita")
+        
+        print("Baú à esquerda: " .. (bauEsquerda and "SIM" or "NÃO"))
+        print("Baú à direita: " .. (bauDireita and "SIM" or "NÃO"))
+    elseif opcao == "8" then
         print("Programa finalizado")
         return
     else
@@ -298,5 +529,6 @@ function menu()
 end
 
 -- Inicia o programa
-print("Turtle Seguidor de Obsidiana carregado!")
+print("Turtle Mineradora de Obsidiana carregado!")
+print("Sistema de mineração automática com gerenciamento de inventário")
 menu()
