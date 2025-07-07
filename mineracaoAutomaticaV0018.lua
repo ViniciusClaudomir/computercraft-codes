@@ -1,3 +1,4 @@
+local pos_chest = 0
 -- Função para detectar se o bloco abaixo é obsidiana
 function detectarObsidiana()
     local sucesso, dados = turtle.inspect()
@@ -69,10 +70,11 @@ function andarEmObsidiana()
 
     if sucesso and dados.name == "minecraft:obsidian" or dados.name == "minecraft:iron_block" then
         -- Se for obsidiana, anda para frente
-        if dados.name == "minecraft:iron_block" then
+        if dados.name == "minecraft:iron_block" and pos_chest == 0 then
             turtle.turnLeft()
             depositAllObsidian()
-            turtle.turnLeft()
+            pos_chest = 1
+            turtle.turnRight()
             turtle.forward()
             andarEmObsidiana()
         end
