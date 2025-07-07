@@ -73,6 +73,8 @@ function andarEmObsidiana()
             turtle.turnLeft()
             depositAllObsidian()
             turtle.turnLeft()
+            turtle.forward()
+            andarEmObsidiana()
         end
         if turtle.forward() then
             print("Andando sobre obsidiana...")
@@ -81,6 +83,11 @@ function andarEmObsidiana()
             end
         else
             print("Não conseguiu andar para frente")
+            local sucesso2, dados2 = turtle.inspectDown()
+            if sucesso2 and dados2.name == "minecraft:obsidian" then
+                print("Obisidian a frente!!!")
+                return true
+            end
         end
     else
         -- Se não for obsidiana, volta para o bloco anterior
