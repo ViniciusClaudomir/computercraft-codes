@@ -40,7 +40,6 @@ function reabastecer()
     
     if nivelCombustivel < (maxCombustivel * 0.2) then
         print("Combustível baixo! Tentando reabastecer...")
-        
         local item = turtle.getItemDetail(1)
         if item and turtle.refuel(1) then
             print("Combustível adicionado!")
