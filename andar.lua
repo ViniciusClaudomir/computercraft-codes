@@ -349,30 +349,15 @@ function procurarObsidianaFrente()
     return false
 end
 
--- Função principal de mineração automática de obsidiana
-function minerarObsidiana()
-    print("=== MINERAÇÃO AUTOMÁTICA DE OBSIDIANA ===")
-    print("A turtle irá:")
-    print("- Quebrar obsidiana apenas na frente")
-    print("- Depositar no baú quando inventário encher")
-    print("- Procurar mais obsidiana automaticamente")
-    print("Pressione Ctrl+T para parar")
-    print()
+-- Função para quebrar obsidiana até encher o inventário
+function quebrarObsidianaAteEncher()
+    print("Iniciando quebra de obsidiana até encher inventário...")
     
-    while true do
-        -- Verifica combustível antes de cada ação
+    while not inventarioCheio() do
+        -- Verifica combustível
         if not reabastecer() then
-            print("ERRO: Sem combustível! Parando mineração...")
-            break
-        end
-        
-        -- Verifica se o inventário está cheio
-        if inventarioCheio() then
-            print("Inventário cheio! Procurando baú...")
-            if not depositarObsidianas() then
-                print("ERRO: Não foi possível depositar obsidianas! Parando...")
-                break
-            end
+            print("ERRO: Sem combustível! Parando quebra...")
+            return false
         end
         
         -- Verifica se há obsidiana na frente
@@ -381,15 +366,53 @@ function minerarObsidiana()
             turtle.dig()
             print("Obsidiana quebrada! Total no inventário: " .. contarObsidianas())
         else
-            print("Nenhuma obsidiana na frente! Procurando mais obsidiana...")
+            print("Nenhuma obsidiana na frente! Procurando mais...")
             if not procurarObsidianaFrente() then
-                print("Nenhuma obsidiana encontrada! Parando mineração...")
-                break
+                print("Nenhuma obsidiana encontrada! Parando quebra...")
+                return false
             end
         end
         
-        -- Pequena pausa para não sobrecarregar
         os.sleep(0.1)
+    end
+    
+    print("Inventário cheio! (" .. contarObsidianas() .. " obsidianas)")
+    return true
+end
+
+-- Função principal de mineração automática de obsidiana
+function minerarObsidiana()
+    print("=== MINERAÇÃO AUTOMÁTICA DE OBSIDIANA ===")
+    print("A turtle irá:")
+    print("- Quebrar obsidiana até encher o inventário")
+    print("- Depositar no baú quando estiver cheio")
+    print("- Voltar a procurar mais obsidiana")
+    print("Pressione Ctrl+T para parar")
+    print()
+    
+    while true do
+        -- Verifica combustível antes de cada ciclo
+        if not reabastecer() then
+            print("ERRO: Sem combustível! Parando mineração...")
+            break
+        end
+        
+        -- FASE 1: Quebrar obsidiana até encher o inventário
+        print("=== FASE 1: QUEBRANDO OBSIDIANA ===")
+        if not quebrarObsidianaAteEncher() then
+            print("ERRO: Não foi possível quebrar obsidiana! Parando...")
+            break
+        end
+        
+        -- FASE 2: Depositar no baú
+        print("=== FASE 2: DEPOSITANDO NO BAÚ ===")
+        if not depositarObsidianas() then
+            print("ERRO: Não foi possível depositar obsidianas! Parando...")
+            break
+        end
+        
+        print("=== CICLO COMPLETO! INICIANDO PRÓXIMO CICLO ===")
+        print()
     end
     
     print("Mineração finalizada!")
@@ -473,7 +496,8 @@ function menu()
     print("5. Testar detecção lateral")
     print("6. Verificar inventário")
     print("7. Testar detecção de baú")
-    print("8. Sair")
+    print("8. Testar quebra até encher")
+    print("9. Sair")
     print("Escolha uma opção:")
     
     local opcao = read()
@@ -518,6 +542,13 @@ function menu()
         print("Baú à esquerda: " .. (bauEsquerda and "SIM" or "NÃO"))
         print("Baú à direita: " .. (bauDireita and "SIM" or "NÃO"))
     elseif opcao == "8" then
+        print("Testando quebra de obsidiana até encher...")
+        if quebrarObsidianaAteEncher() then
+            print("Teste concluído! Inventário cheio.")
+        else
+            print("Teste falhou!")
+        end
+    elseif opcao == "9" then
         print("Programa finalizado")
         return
     else
