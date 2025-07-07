@@ -38,7 +38,7 @@ function reabastecer()
     local maxCombustivel = turtle.getFuelLimit()
     print("Nível de combustível atual: " .. nivelCombustivel .. "/" .. maxCombustivel)
     
-    if nivelCombustivel < (maxCombustivel * 0.2) then
+    if nivelCombustivel < (maxCombustivel * 0.8) then
         print("Combustível baixo! Tentando reabastecer...")
         local item = turtle.getItemDetail(1)
         if item and turtle.refuel(1) then
@@ -66,20 +66,15 @@ end
 function andarEmObsidiana()
     -- Verifica se o bloco abaixo é obsidiana
     local sucesso, dados = turtle.inspectDown()
-    if sucesso and dados.name == "minecraft:obsidian" then
+    if sucesso and dados.name == "minecraft:obsidian" or dados.name == "minecraft:iron_block" then
         -- Se for obsidiana, anda para frente
+        if turtle.inspect()[1] == "minecraft:iron_block" then
+            turtle.turnLeft()
+            depositAllObsidian()
+            turtle.turnLeft()
+        end
         if turtle.forward() then
             print("Andando sobre obsidiana...")
-            if turtle.inspectLeft()[1] == "minecraft:chest" then
-                turtle.turnLeft()
-                depositAllObsidian()
-                turtle.turnRight()
-            end
-            if turtle.inspectRight()[1] == "minecraft:chest" then
-                turtle.turnRight()
-                depositAllObsidian()
-                turtle.turnLeft()
-            end
             if turtle.inspect()[1] == "minecraft:obsidian" then
                 return true
             end
@@ -139,7 +134,11 @@ function main()
         
         minerarObsidiana()
     end
-    
+
+    turtle.turnLeft()
+    turtle.turnLeft()
+    turtle.forward()
+    turtle.turnLeft()
 
     andarEmObsidiana()
     
