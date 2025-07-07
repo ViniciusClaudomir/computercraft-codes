@@ -41,18 +41,12 @@ function reabastecer()
     if nivelCombustivel < (maxCombustivel * 0.2) then
         print("Combustível baixo! Tentando reabastecer...")
         
-        -- Procurar por combustível no inventário
-        for i = 1, 16 do
-            local item = turtle.getItemDetail(i)
-            if item and turtle.refuel(1) then
-                print("Combustível adicionado!")
-                nivelCombustivel = turtle.getFuelLevel()
-                break
-            end
-        end
-        
-        if nivelCombustivel < (maxCombustivel * 0.2) then
-            print("ERRO: Sem combustível suficiente para continuar!")
+        local item = turtle.getItemDetail(1)
+        if item and turtle.refuel(1) then
+            print("Combustível adicionado!")
+            nivelCombustivel = turtle.getFuelLevel()
+        else
+            print("ERRO: Sem combustível no slot 1 para continuar!")
             return false
         end
     end
