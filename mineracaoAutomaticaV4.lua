@@ -81,7 +81,7 @@ function andarEmObsidiana()
                 turtle.turnLeft()
             end
             if turtle.inspect()[1] == "minecraft:obsidian" then
-                break
+                return true
             end
             andarEmObsidiana()
         else
