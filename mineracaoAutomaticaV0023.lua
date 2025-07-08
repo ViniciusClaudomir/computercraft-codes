@@ -1,3 +1,4 @@
+local pos_chest = 0
 -- Função para detectar se o bloco abaixo é obsidiana
 function detectarObsidiana()
     local sucesso, dados = turtle.inspect()
@@ -38,7 +39,7 @@ function reabastecer()
     local maxCombustivel = turtle.getFuelLimit()
     print("Nível de combustível atual: " .. nivelCombustivel .. "/" .. maxCombustivel)
     
-    if nivelCombustivel < (maxCombustivel * 0.2) then
+    if nivelCombustivel < 100 then
         print("Combustível baixo! Tentando reabastecer...")
         local item = turtle.getItemDetail(1)
         if item and turtle.refuel(1) then
@@ -63,57 +64,70 @@ function depositAllObsidian()
     turtle.select(1) -- retorna ao slot 1
 end
 
+function virar()
+    if pos_chest then
+        turtle.turnRight()
+    else
+        turtle.turnLeft()
+    end
+end
+
 function andarEmObsidiana()
     -- Verifica se o bloco abaixo é obsidiana
     local sucesso, dados = turtle.inspectDown()
-    if sucesso and dados.name == "minecraft:obsidian" then
+
+    if sucesso and dados.name == "minecraft:obsidian" or dados.name == "minecraft:iron_block" then
         -- Se for obsidiana, anda para frente
+        if dados.name == "minecraft:iron_block" and pos_chest == 0 then
+            turtle.turnLeft()
+            depositAllObsidian()
+            pos_chest = 1
+            turtle.turnRight()
+            turtle.forward()
+            return andarEmObsidiana()
+        end
         if turtle.forward() then
             print("Andando sobre obsidiana...")
-            if turtle.inspectLeft()[1] == "minecraft:chest" then
-                turtle.turnLeft()
-                depositAllObsidian()
-                turtle.turnRight()
-
+            if dados.name == "minecraft:obsidian" or  "minecraft:iron_block" then
+                return andarEmObsidiana()
             end
-            if turtle.inspectRight()[1] == "minecraft:chest" then
-                turtle.turnRight()
-                depositAllObsidian()
-                turtle.turnLeft()
-            end
-            if turtle.inspect()[1] == "minecraft:obsidian" then
-                return true
-            end
-            andarEmObsidiana()
         else
             print("Não conseguiu andar para frente")
+            local sucesso2, dados2 = turtle.inspectDown()
+            if sucesso2 and dados2.name == "minecraft:obsidian" then
+                print("Obisidian a frente!!!")
+                return true
+            end
         end
     else
         -- Se não for obsidiana, volta para o bloco anterior
         print("Obsidiana não encontrada, voltando...")
         turtle.back()
         
-        -- Vira para a direita e verifica
-        turtle.turnRight()
+        virar()
+
         local sucessoDir, dadosDir = turtle.inspectDown()
-        if sucessoDir and dadosDir.name == "minecraft:obsidian" then
+        if sucessoDir and dadosDir.name == "minecraft:obsidian" or  "minecraft:iron_block" then
             if turtle.forward() then
                 print("Encontrou obsidiana à direita, continuando...")
                 andarEmObsidiana()
             end
         else
             -- Se não encontrar à direita, vira para a esquerda e verifica
-            turtle.turnLeft()
-            turtle.turnLeft()
+            virar()
             local sucessoEsq, dadosEsq = turtle.inspectDown()
-            if sucessoEsq and dadosEsq.name == "minecraft:obsidian" then
+            if sucessoEsq and dadosEsq.name == "minecraft:obsidian" or  "minecraft:iron_block" then
                 if turtle.forward() then
                     print("Encontrou obsidiana à esquerda, continuando...")
                     andarEmObsidiana()
                 end
             else
                 -- Se não encontrar em nenhum lado, volta para a posição original
-                turtle.turnRight()
+                if pos_chest == 0 then
+                    turtle.turnRight()
+                  else
+                    turtle.turnLeft()
+                  end
                 print("Nenhuma obsidiana encontrada em nenhuma direção")
             end
         end
@@ -126,23 +140,32 @@ function main()
     print("Iniciando mineração automática de obsidiana...")
     
     while true do
-        -- Verificar combustível antes de minerar
-        if not reabastecer() then
-            print("Parando mineração devido à falta de combustível")
-            break
-        end
         
-        -- Verificar se há combustível suficiente para minerar
-        if turtle.getFuelLevel() < 1 then
-            print("ERRO: Sem combustível para minerar!")
-            break
+        while not verificarInventario() do
+            -- Verificar combustível antes de minerar
+            if not reabastecer() then
+                print("Parando mineração devido à falta de combustível")
+                break
+            end
+            
+            -- Verificar se há combustível suficiente para minerar
+            if turtle.getFuelLevel() < 1 then
+                print("ERRO: Sem combustível para minerar!")
+                break
+            end
+            
+            minerarObsidiana()
         end
-        
-        minerarObsidiana()
-    end
-    
 
-    andarEmObsidiana()
+        turtle.turnLeft()
+        turtle.turnLeft()
+        turtle.forward()
+        turtle.turnLeft()
+
+        andarEmObsidiana()
+        pos_chest = 0
+
+    end
     
     print("Mineração concluída! Inventário cheio ou sem combustível.")
 end
