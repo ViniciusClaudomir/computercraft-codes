@@ -78,7 +78,7 @@ function andarEmObsidiana()
 
     if sucesso and dados.name == "minecraft:obsidian" or dados.name == "minecraft:iron_block" then
         -- Se for obsidiana, anda para frente
-        if dados.name == "minecraft:iron_block" and pos_chest == 0 then
+        if dados.name == "minecraft:iron_block" and pos_chest == false then
             turtle.turnLeft()
             depositAllObsidian()
             pos_chest = 1
