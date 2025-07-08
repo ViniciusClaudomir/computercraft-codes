@@ -67,8 +67,11 @@ end
 function virar()
     if pos_chest then
         turtle.turnRight()
-    else
+        print("Direita")
+      else
         turtle.turnLeft()
+        print("Esquerda")
+      end
     end
 end
 
@@ -123,7 +126,11 @@ function andarEmObsidiana()
                 end
             else
                 -- Se não encontrar em nenhum lado, volta para a posição original
-                virar()
+                if pos_chest == 0 then
+                    turtle.turnRight()
+                  else
+                    turtle.turnLeft()
+                  end
                 print("Nenhuma obsidiana encontrada em nenhuma direção")
             end
         end
@@ -157,12 +164,9 @@ function main()
         turtle.turnLeft()
         turtle.forward()
         turtle.turnLeft()
-
         andarEmObsidiana()
         pos_chest = 0
-
-    end
-    
+    end    
     print("Mineração concluída! Inventário cheio ou sem combustível.")
 end
 
