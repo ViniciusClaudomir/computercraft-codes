@@ -84,7 +84,10 @@ end
 
 function andar()
     if not turtle.forward() then
-        turtle.back()
+        local sucesso0, dados0 = turtle.inspectDown()
+        if  (dados0.name ~= "minecraft:obsidian" and dados0.name ~= "minecraft:iron_block") then
+            turtle.back()
+        end
         virar()
         return andar()
     else
