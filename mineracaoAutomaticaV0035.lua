@@ -96,14 +96,14 @@ function andar()
         end
         
         sucesso2, dados2 = turtle.inspect()
-        if sucesso and (dados.name == "minecraft:obsidian" or dados.name == "minecraft:iron_block") then
-            if dados.name == "minecraft:iron_block" and pos_chest == false then
+        if sucesso2 and (dados2.name == "minecraft:obsidian" or dados2.name == "minecraft:iron_block") then
+            if dados2.name == "minecraft:iron_block" and pos_chest == false then
                 turtle.turnLeft()
                 depositAllObsidian()
                 pos_chest = true
                 return andar()
             end
-            if dados.name == "minecraft:obsidian" then
+            if dados2.name == "minecraft:obsidian" then
                 print("Encontrei obisidian pra minerar :D")
                 return "minerar"
             end
